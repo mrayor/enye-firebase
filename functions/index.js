@@ -4,6 +4,7 @@ const cors = require("cors");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const serviceAccount = require("./enye-firebase.json");
+const uuidv5 = require("uuid/v5");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://enye-firebase-4d29f.firebaseio.com"
@@ -45,5 +46,15 @@ app.post("/", (request, response) => {
         .send("Something went wrong, Please try again " + error);
     });
 });
+
+exports.onUserCreate = functions.database
+  .ref("/users/{pushID}")
+  .onCreate((snapshot, context) => {
+    const pushID = context.params.pushID;
+    console.log(pushID);
+    const userData = snapshot.val();
+    const key = uuidv5("userUUID", userData.key);
+    return snapshot.ref.update({ key: key });
+  });
 
 exports.users = functions.https.onRequest(app);
